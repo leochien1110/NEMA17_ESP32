@@ -32,6 +32,16 @@ The agent acts as the bridge between the ESP32 (WiFi) and your ROS 2 Desktop env
 ```bash
 # Allow network traffic (Open port 8888/UDP)
 docker run -it --rm -p 8888:8888/udp microros/micro-ros-agent:humble udp4 --port 8888
+# should see:
+1767469704.091203] info     | Root.cpp           | create_client            | create                 | client_key: 0x7ADCF685, session_id: 0x81
+[1767469704.091227] info     | SessionManager.hpp | establish_session        | session established    | client_key: 0x7ADCF685, address: 192.168.65.1:39791
+[1767469704.120309] info     | ProxyClient.cpp    | create_participant       | participant created    | client_key: 0x7ADCF685, participant_id: 0x000(1)
+[1767469704.146087] info     | ProxyClient.cpp    | create_topic             | topic created          | client_key: 0x7ADCF685, topic_id: 0x000(2), participant_id: 0x000(1)
+[1767469704.166302] info     | ProxyClient.cpp    | create_publisher         | publisher created      | client_key: 0x7ADCF685, publisher_id: 0x000(3), participant_id: 0x000(1)
+[1767469704.186922] info     | ProxyClient.cpp    | create_datawriter        | datawriter created     | client_key: 0x7ADCF685, datawriter_id: 0x000(5), publisher_id: 0x000(3)
+[1767469704.216201] info     | ProxyClient.cpp    | create_topic             | topic created          | client_key: 0x7ADCF685, topic_id: 0x001(2), participant_id: 0x000(1)
+[1767469704.235613] info     | ProxyClient.cpp    | create_subscriber        | subscriber created     | client_key: 0x7ADCF685, subscriber_id: 0x000(4), participant_id: 0x000(1)
+[1767469704.266522] info     | ProxyClient.cpp    | create_datareader        | datareader created     | client_key: 0x7ADCF685, datareader_id: 0x000(6), subscriber_id: 0x000(4)
 ```
 *Wait until you see the ESP32 connect in the agent logs.*
 

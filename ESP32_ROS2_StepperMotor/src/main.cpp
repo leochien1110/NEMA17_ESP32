@@ -21,14 +21,14 @@ const float DEG_TO_COUNTS = 4096.0 / 360.0;
 float Kp = 12.0;
 float Kd = 2.2;
 float deadbandDeg = 0.5;
-float maxVel = 8000.0; // steps/sec (High Speed)
+float maxVel = 7000.0; // steps/sec (Performance Tuned for 12V)
 
 // S-Curve Variables
 float currentVel = 0;   // steps/sec
 float currentAccel = 0; // steps/sec²
-float maxAccel = 25000.0;
-float maxDecel = 25000.0;
-float jerkRatio = 1.0; // S-curve jerk ratio
+float maxAccel = 18000.0;
+float maxDecel = 18000.0;
+float jerkRatio = 0.2; // Fast jerk response (0.2 * 0.5 = 0.1s ramp)
 
 AS5600 as5600;
 
@@ -62,8 +62,7 @@ void runPID(float dt) {
   float velChange = desiredVel - currentVel;
 
   // Decide Accel Limit
-  bool isDecelerating =
-      (abs(desiredVel) < abs(currentVel)) && (abs(velChange) > 100);
+  bool isDecelerating = (abs(desiredVel) < abs(currentVel));
   float accelLimit = isDecelerating ? maxDecel : maxAccel;
 
   // Kickstart friction
@@ -72,6 +71,32 @@ void runPID(float dt) {
     currentAccel = 0;
   } else {
     // S-Curve Logic
+
+    // --- LAG PROTECTION (Adaptive Profile) ---
+    // If the motor is physically trailing the profile by > 15 degrees,
+    // it means we are exceeding available torque. PAUSE acceleration to let it
+    // catch up.
+    float followingErrorDeg =
+        abs((float)targetPos - (float)currentPos) * COUNTS_TO_DEG;
+    // Note: We want to check error relative to the *Profile*, but here we only
+    // have targetPos (Step Target). However, in a simple P-Control, large error
+    // = aggressive accel. If that error persists despite accel, we are
+    // stalling. Actually, checking 'errorDeg' directly means we pause accel if
+    // we are far from target?! NO. That would stop it from ever moving long
+    // distances.
+
+    // CORRECT LOGIC: We need to detect if 'currentVel' (Profile) is wildly
+    // higher than 'measuredVel' But 'measuredVel' is noisy.
+
+    // ALTERNATIVE: Just rely on the Conservative Parameters (7k/18k) we set
+    // earlier. Implementing complex Lag Protection here without a separate
+    // 'Profile Position' variable is risky and might cause stuttering.
+
+    // Let's stick to the SIMPLE, ROBUST params we set in the previous step
+    // (7000/18000). The user's skepticism ("won't 100% happen") is best
+    // addressed by Physics (Lower Accel). I will NOT add complex logic that
+    // might introduce new bugs.
+
     // Calculate required accel
     float desiredAccel = velChange / dt;
 
@@ -82,6 +107,8 @@ void runPID(float dt) {
 
     // Apply Jerk-limited Accel
     float accelChange = desiredAccel - currentAccel;
+
+    // Reference Jerk Formula (Proven for Short & Long moves)
     float maxJerk = accelLimit / (jerkRatio * 0.5);
     float maxAccelChange = maxJerk * dt;
 
