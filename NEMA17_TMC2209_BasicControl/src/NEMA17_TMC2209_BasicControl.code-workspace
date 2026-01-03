@@ -1,0 +1,16 @@
+{
+	"folders": [
+		{
+			"path": ".."
+		},
+		{
+			"name": "NEMA17_A4988_BasicControl",
+			"path": "../../NEMA17_A4988_BasicControl"
+		},
+		{
+			"name": "A5600_Encoder",
+			"path": "../../A5600_Encoder"
+		}
+	],
+	"settings": {}
+}
